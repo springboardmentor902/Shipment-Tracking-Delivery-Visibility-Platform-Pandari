@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShipTrack Pro — Frontend</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div><h1>ShipTrack</h1><span>Pro Dashboard</span></div>
+      </div>
+
+      <nav id="sidebarNav">
+        <button class="nav-item active" data-section="dashboard">⌂ <span>Dashboard</span></button>
+        <button class="nav-item" data-section="profile">👤 <span>Profile</span></button>
+        <button class="nav-item" data-section="business">▣ <span>Business Account</span></button>
+        <button class="nav-item" data-section="settings">⚙ <span>Account Settings</span></button>
+        <button class="nav-item" data-section="admin">♟ <span>Admin — Manage Users</span></button>
+        <div class="nav-divider"></div>
+        <button class="nav-item" data-section="shipments">▤ <span>My Shipments</span></button>
+        <button class="nav-item" data-section="create-shipment">＋ <span>Create Shipment</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="user-mini">
+          <div class="avatar">RK</div>
+          <div><strong id="miniName">Ravi Kumar</strong><small id="miniRole">BUSINESS_CLIENT</small></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">SHIPMENT MANAGEMENT</p><h2 id="pageTitle">Dashboard</h2></div>
+        <div class="top-actions">
+          <button class="icon-btn" onclick="showToast('No new notifications')">🔔</button>
+          <div class="top-user"><div class="avatar small">RK</div><span>Ravi Kumar</span></div>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page-section active">
+        <div class="welcome"><div><p class="eyebrow">WELCOME BACK</p><h3>Track your shipments from one place.</h3><p>Manage your profile, business account and deliveries.</p></div><button class="primary" onclick="navigate('create-shipment')">+ Create Shipment</button></div>
+        <div class="stats">
+          <div class="stat-card"><span>Total Shipments</span><strong>24</strong><small>All time</small></div>
+          <div class="stat-card"><span>In Transit</span><strong>8</strong><small>Currently moving</small></div>
+          <div class="stat-card"><span>Delivered</span><strong>14</strong><small>This month</small></div>
+          <div class="stat-card"><span>Cancelled</span><strong>2</strong><small>All time</small></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-head"><div><h3>Recent Shipments</h3><p>Your latest shipment activity</p></div><button class="text-btn" onclick="navigate('shipments')">View all</button></div><div id="recentShipments"></div></div>
+          <div class="card"><div class="card-head"><div><h3>Quick Actions</h3><p>Common account tasks</p></div></div><div class="quick-actions">
+            <button onclick="navigate('profile')">👤 Edit Profile</button><button onclick="navigate('business')">▣ Business Account Setup</button><button onclick="navigate('settings')">⚙ Account Settings</button><button onclick="navigate('shipments')">▤ My Shipments</button>
+          </div></div>
+        </div>
+      </section>
+
+      <section id="profile" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 2</p><h3>Profile</h3><p>View and edit your personal information.</p></div>
+        <div class="card form-card"><form id="profileForm"><div class="form-grid">
+          <label>Full Name<input id="profileName" value="Ravi Kumar" required /></label>
+          <label>Email<input id="profileEmail" type="email" value="ravi.kiran@example.com" required /></label>
+          <label>Phone<input id="profilePhone" value="9876543210" required /></label>
+          <label>Role<select id="profileRole"><option>BUSINESS_CLIENT</option><option>CUSTOMER</option><option>OPERATOR</option><option>ADMINISTRATOR</option></select></label>
+        </div><div class="form-actions"><button type="button" class="secondary" onclick="resetProfile()">Reset</button><button class="primary">Save Changes</button></div></form></div>
+      </section>
+
+      <section id="business" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 2</p><h3>Business Account Setup</h3><p>Complete your business profile for shipment management.</p></div>
+        <div class="card form-card"><form id="businessForm"><div class="form-grid">
+          <label>Business Name<input id="businessName" placeholder="ABC Logistics Pvt Ltd" required /></label>
+          <label>Business Email<input type="email" id="businessEmail" placeholder="business@example.com" required /></label>
+          <label>GST / Tax ID<input id="gst" placeholder="GSTIN123456" /></label>
+          <label>Business Phone<input id="businessPhone" placeholder="9876543210" /></label>
+          <label class="full">Business Address<textarea id="businessAddress" rows="3" placeholder="Enter complete business address"></textarea></label>
+        </div><div class="form-actions"><button class="primary">Save Business Account</button></div></form></div>
+      </section>
+
+      <section id="settings" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 2</p><h3>Account Settings</h3><p>Manage security and notification preferences.</p></div>
+        <div class="settings-list card">
+          <div class="setting-row"><div><strong>Email notifications</strong><p>Receive shipment status updates by email.</p></div><label class="switch"><input type="checkbox" checked /><span></span></label></div>
+          <div class="setting-row"><div><strong>Push notifications</strong><p>Receive delivery and delay alerts.</p></div><label class="switch"><input type="checkbox" checked /><span></span></label></div>
+          <div class="setting-row"><div><strong>SMS notifications</strong><p>Receive important delivery messages.</p></div><label class="switch"><input type="checkbox" /><span></span></label></div>
+          <div class="setting-row"><div><strong>Two-factor authentication</strong><p>Add an extra layer of account security.</p></div><button class="secondary" onclick="showToast('2FA setup opened')">Configure</button></div>
+          <div class="danger-zone"><strong>Danger Zone</strong><p>Deleting your account cannot be undone.</p><button class="danger" onclick="showToast('Demo only — account deletion is disabled')">Delete Account</button></div>
+        </div>
+      </section>
+
+      <section id="admin" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 2</p><h3>Admin — Manage Users</h3><p>View users and update their roles or account status.</p></div>
+        <div class="card"><div class="toolbar"><input id="userSearch" placeholder="Search by name or email..." oninput="renderUsers()" /><select id="roleFilter" onchange="renderUsers()"><option value="">All roles</option><option>CUSTOMER</option><option>BUSINESS_CLIENT</option><option>OPERATOR</option><option>ADMINISTRATOR</option></select></div><div class="table-wrap"><table><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody id="usersTable"></tbody></table></div></div>
+      </section>
+
+      <section id="shipments" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 4</p><h3>My Shipments</h3><p>View, track and manage your shipments.</p></div>
+        <div class="card"><div class="toolbar"><input id="shipmentSearch" placeholder="Search tracking number..." oninput="renderShipments()" /><select id="shipmentFilter" onchange="renderShipments()"><option value="">All statuses</option><option>In Transit</option><option>Delivered</option><option>Out for Delivery</option><option>Cancelled</option></select><button class="primary" onclick="navigate('create-shipment')">+ New Shipment</button></div><div class="table-wrap"><table><thead><tr><th>Tracking No.</th><th>Destination</th><th>Created</th><th>Status</th><th>Action</th></tr></thead><tbody id="shipmentsTable"></tbody></table></div></div>
+      </section>
+
+      <section id="create-shipment" class="page-section">
+        <div class="section-intro"><p class="eyebrow">OPTION 4</p><h3>Create Shipment</h3><p>Enter shipment details to create a new delivery.</p></div>
+        <div class="card form-card"><form id="shipmentForm"><div class="form-grid">
+          <label>Receiver Name<input id="receiverName" required placeholder="Receiver full name" /></label>
+          <label>Receiver Phone<input id="receiverPhone" required placeholder="9876543210" /></label>
+          <label class="full">Delivery Address<textarea id="deliveryAddress" rows="3" required placeholder="Enter delivery address"></textarea></label>
+          <label>Package Type<select id="packageType"><option>Parcel</option><option>Document</option><option>Electronics</option><option>Fragile</option></select></label>
+          <label>Estimated Delivery<input id="estimatedDelivery" type="date" required /></label>
+        </div><div class="form-actions"><button type="button" class="secondary" onclick="navigate('shipments')">Cancel</button><button class="primary">Create Shipment</button></div></form></div>
+      </section>
+
+      <section id="details" class="page-section">
+        <div class="section-intro"><p class="eyebrow">LIVE TRACKING</p><h3>Shipment Details</h3><p id="detailSubtitle">Shipment information and tracking timeline.</p></div>
+        <div id="trackingStatus" class="tracking-status offline"><span class="status-dot"></span><strong>Tracking not connected</strong><span id="trackingStatusText">Open a shipment to start live tracking.</span></div>
+        <div id="shipmentDetails"></div>
+        <div class="tracking-map-card card">
+          <div class="card-head"><div><h3>Live Shipment Map</h3><p>Vehicle location updates arrive through WebSocket without refreshing the page.</p></div><span id="lastLocation" class="map-meta">Waiting for location…</span></div>
+          <div id="trackingMap"></div>
+          <div class="map-legend"><span><i class="legend-dot vehicle"></i> Current vehicle location</span><span><i class="legend-line"></i> Planned road route</span><span id="routeInfo">Route ID: —</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
