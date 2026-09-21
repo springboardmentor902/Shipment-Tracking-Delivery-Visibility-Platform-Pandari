@@ -188,8 +188,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
 
                 <configuration>
-                    <source>25</source>
-                    <target>25</target>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
 
