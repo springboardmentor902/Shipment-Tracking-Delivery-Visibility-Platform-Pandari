@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShipTrack Pro — Full Dashboard Suite</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div><h1>ShipTrack</h1><span>Pro Enterprise</span></div>
+      </div>
+
+      <nav id="sidebarNav">
+        <button class="nav-item active" data-section="dashboard">⌂ <span>Dashboard</span></button>
+        <button class="nav-item" data-section="shipments">▤ <span>My Shipments</span></button>
+        <button class="nav-item" data-section="create-shipment">＋ <span>Create Shipment</span></button>
+        <button class="nav-item" data-section="live-monitoring">🛰 <span>Live Monitoring</span></button>
+        <button class="nav-item" data-section="business-dashboard">▣ <span>Business Dashboard</span></button>
+        <button class="nav-item" data-section="operator-delivery">✍ <span>Operator Delivery</span></button>
+        <button class="nav-item" data-section="analytics">📊 <span>Analytics Hub</span></button>
+        <button class="nav-item" data-section="reports">📥 <span>Reports & Export</span></button>
+        <div class="nav-divider"></div>
+        <button class="nav-item" data-section="admin-routes">🛣 <span>Route Analytics (Admin)</span></button>
+        <button class="nav-item" data-section="admin">♟ <span>Manage Users</span></button>
+        <button class="nav-item" data-section="profile">👤 <span>Profile</span></button>
+        <button class="nav-item" data-section="settings">⚙ <span>Settings</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="user-mini">
+          <div class="avatar">RK</div>
+          <div><strong id="miniName">Ravi Kumar</strong><small id="miniRole">BUSINESS_CLIENT</small></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main">
+      <!-- Top Navigation / Notification Bar -->
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">ENTERPRISE LOGISTICS SUITE</p>
+          <h2 id="pageTitle">Dashboard</h2>
+        </div>
+        <div class="top-actions">
+          <div class="notification-wrapper">
+            <button class="icon-btn notif-bell" id="notifBellBtn" onclick="toggleNotifications()">
+              🔔 <span class="notif-badge" id="notifCount">0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notif-header">
+                <strong>Notifications</strong>
+                <button class="text-btn" onclick="markAllNotificationsAsRead()">Mark all read</button>
+              </div>
+              <div class="notif-list" id="notifList"></div>
+            </div>
+          </div>
+
+          <div class="top-user">
+            <div class="avatar small" id="topAvatar">RK</div>
+            <span id="topUserName">Ravi Kumar (Business)</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- 1. DASHBOARD OVERVIEW -->
+      <section id="dashboard" class="page-section active">
+        <div class="welcome">
+          <div>
+            <p class="eyebrow">WELCOME BACK</p>
+            <h3>Fleet and shipments control center.</h3>
+            <p>Real-time telemetry, automated risk prediction, and proof of delivery tracking.</p>
+          </div>
+          <button class="primary" onclick="navigate('create-shipment')">+ Create Shipment</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><span>Total Shipments</span><strong id="dashTotalShipments">0</strong><small>All time</small></div>
+          <div class="stat-card"><span>In Transit</span><strong id="dashInTransit">0</strong><small>Active on roads</small></div>
+          <div class="stat-card"><span>At Delay Risk</span><strong id="dashAtRisk" style="color:var(--danger)">0</strong><small>Risk score > 50%</small></div>
+          <div class="stat-card"><span>Delivered</span><strong id="dashDelivered" style="color:var(--success)">0</strong><small>With POD verified</small></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Recent Shipments</h3><p>Real-time status updates</p></div>
+              <button class="text-btn" onclick="navigate('shipments')">View all</button>
+            </div>
+            <div id="recentShipments"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Quick Dispatch Hub</h3><p>Frequently accessed operational modules</p></div>
+            </div>
+            <div class="quick-actions">
+              <button onclick="navigate('live-monitoring')">🛰 Live Telemetry Monitor</button>
+              <button onclick="navigate('business-dashboard')">▣ At-Risk Delay Radar</button>
+              <button onclick="navigate('operator-delivery')">✍ Operator Sign & POD</button>
+              <button onclick="navigate('reports')">📥 Export Reports</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. SHIPMENTS LIST -->
+      <section id="shipments" class="page-section">
+        <div class="section-intro"><p class="eyebrow">DIRECTORY</p><h3>All Shipments</h3><p>Manage, filter, and track end-to-end packages.</p></div>
+        <div class="card">
+          <div class="toolbar">
+            <input id="shipmentSearch" placeholder="Search tracking number or city..." oninput="renderShipments()" />
+            <select id="shipmentFilter" onchange="renderShipments()">
+              <option value="">All statuses</option>
+              <option>In Transit</option>
+              <option>Out for Delivery</option>
+              <option>Delivered</option>
+              <option>Cancelled</option>
+            </select>
+            <button class="primary" onclick="navigate('create-shipment')">+ New Shipment</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tracking No.</th>
+                  <th>Destination</th>
+                  <th>Predicted ETA</th>
+                  <th>Delay Risk</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="shipmentsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SHIPMENT DETAILS (WITH ETA/RISK WIDGET, ROUTE HISTORY & POD VIEW) -->
+      <section id="details" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">SHIPMENT CONSOLE</p>
+          <h3>Shipment Details</h3>
+          <p id="detailSubtitle">Consolidated package telemetry and proof of delivery.</p>
+        </div>
+
+        <!-- ETA & Delay Risk Widget -->
+        <div id="etaRiskWidgetContainer" class="eta-risk-widget-card card"></div>
+
+        <div id="shipmentDetails"></div>
+
+        <!-- Route History Section (JSX / Component Mount) -->
+        <div class="card" style="margin-top: 18px;">
+          <div class="card-head">
+            <div>
+              <h3>Route History</h3>
+              <p>Chronological route assignments, dynamic re-routes, and distance telemetry</p>
+            </div>
+            <button class="secondary btn-sm" onclick="simulateReRouteForCurrent()">+ Simulate Re-Route</button>
+          </div>
+          <div id="routeHistoryContainer"></div>
+        </div>
+
+        <!-- Live Map in Details -->
+        <div class="tracking-map-card card">
+          <div class="card-head">
+            <div>
+              <h3>Live Telemetry Map</h3>
+              <p>Real-time vehicle movement over STOMP WebSocket</p>
+            </div>
+            <span id="lastLocation" class="map-meta">Waiting for location…</span>
+          </div>
+          <div id="trackingMap"></div>
+          <div class="map-legend">
+            <span><i class="legend-dot vehicle"></i> Current vehicle location</span>
+            <span><i class="legend-line"></i> Active road trajectory</span>
+            <span id="routeInfo">Route ID: —</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. LIVE DELIVERY MONITORING DASHBOARD -->
+      <section id="live-monitoring" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">OPERATIONS</p>
+          <h3>Live Delivery Monitoring Dashboard</h3>
+          <p>Continuous telemetry, ETA monitoring, and delay risk tracking.</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Select Active Shipment</h3><p>Choose an in-flight vehicle to track</p></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Tracking ID</th><th>Destination</th><th>Risk</th><th>Select</th></tr>
+                </thead>
+                <tbody id="liveMonitoringSelectionTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Active Vehicle Predictive Status</h3><p>Dynamic ETA and traffic delay risk</p></div>
+            </div>
+            <div id="liveMonitoringWidget">
+              <p style="color:var(--text-muted); font-size:13px;">Select a shipment on the left to monitor live status.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card tracking-map-card">
+          <div class="card-head">
+            <div><h3>Active Route Live Telemetry</h3><p>STOMP connection monitoring</p></div>
+            <div id="liveMonTrackingStatus" class="tracking-status offline">
+              <span class="status-dot"></span><strong>Standby</strong>
+            </div>
+          </div>
+          <div id="liveMonMap" style="height: 400px; width: 100%; border-radius: 10px;"></div>
+        </div>
+      </section>
+
+      <!-- 5. BUSINESS DASHBOARD (AT RISK DELAY RADAR) -->
+      <section id="business-dashboard" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">BUSINESS INTELLIGENCE</p>
+          <h3>Business Client Dashboard</h3>
+          <p>Delay-risk threshold warnings, SLA defense, and commercial operations.</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><span>Active Shipments</span><strong id="bizTotalActive">0</strong><small>Current deliveries</small></div>
+          <div class="stat-card"><span>At-Risk Threshold</span><strong>&gt; 50%</strong><small>High delay vulnerability</small></div>
+          <div class="stat-card"><span>Critical Shipments</span><strong id="bizCriticalCount" style="color:var(--danger)">0</strong><small>Action required</small></div>
+          <div class="stat-card"><span>Estimated Impact</span><strong id="bizDelayedCost">₹0</strong><small>Potential SLA penalty</small></div>
+        </div>
+
+        <div class="card danger-border">
+          <div class="card-head">
+            <div>
+              <h3 style="color:var(--danger)">⚠️ At-Risk Shipments Watchlist</h3>
+              <p>Shipments with delay-risk score strictly above defined threshold (50%)</p>
+            </div>
+            <span class="badge badge-danger" id="atRiskBadge">0 Critical</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Destination</th>
+                  <th>ETA</th>
+                  <th>Delay Risk</th>
+                  <th>Delay Factor / Cause</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="atRiskTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. OPERATOR COMPLETE DELIVERY (SIGNATURE & POD) -->
+      <section id="operator-delivery" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">LOGISTICS OPERATOR</p>
+          <h3>Complete Delivery & Proof of Delivery (POD)</h3>
+          <p>Record recipient acknowledgment, capture digital signatures, and upload delivery photo proof.</p>
+        </div>
+
+        <div class="card form-card">
+          <form id="completeDeliveryForm">
+            <div class="form-grid">
+              <label>Select Shipment Out for Delivery
+                <select id="podShipmentSelect" required onchange="onSelectPodShipment(this.value)"></select>
+              </label>
+
+              <label>Recipient Full Name
+                <input id="podRecipientName" placeholder="e.g., S. Venkat Raman" required />
+              </label>
+
+              <label class="full">Delivery Notes
+                <textarea id="podDeliveryNotes" rows="2" placeholder="e.g. Left with reception / Delivered directly to resident"></textarea>
+              </label>
+
+              <!-- Photo Upload Field -->
+              <div class="full">
+                <label>Package Delivery Photo Proof</label>
+                <div class="file-upload-zone" onclick="document.getElementById('podPhotoInput').click()">
+                  <input type="file" id="podPhotoInput" accept="image/*" style="display:none" onchange="previewPodPhoto(event)" />
+                  <div id="podPhotoPrompt">
+                    <span style="font-size:24px">📷</span>
+                    <p>Click or drag to attach delivery confirmation photo</p>
+                  </div>
+                  <img id="podPhotoPreview" class="photo-preview hidden" alt="Delivery Proof Preview" />
+                </div>
+              </div>
+
+              <!-- Signature Pad -->
+              <div class="full">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <label style="margin:0;">Recipient Signature (Draw inside box)</label>
+                  <button type="button" class="text-btn" onclick="clearSignature()">Clear Signature</button>
+                </div>
+                <div class="canvas-container">
+                  <canvas id="signatureCanvas" width="600" height="180"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="secondary" onclick="navigate('dashboard')">Cancel</button>
+              <button type="submit" class="primary">Submit Proof & Mark Delivered</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 7. ANALYTICS DASHBOARDS (CUSTOMER / BUSINESS / ADMIN) -->
+      <section id="analytics" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">METRICS & KPI</p>
+          <h3>Role-Based Analytics Dashboard</h3>
+          <p>Custom analytics visualizations filtered according to authenticated permissions.</p>
+        </div>
+
+        <div class="role-selector-bar">
+          <span>Active Role View:</span>
+          <button class="role-pill active" onclick="switchAnalyticsRole('BUSINESS_CLIENT', this)">Business Client</button>
+          <button class="role-pill" onclick="switchAnalyticsRole('CUSTOMER', this)">Customer</button>
+          <button class="role-pill" onclick="switchAnalyticsRole('ADMINISTRATOR', this)">Admin</button>
+        </div>
+
+        <div id="analyticsRoleContent"></div>
+      </section>
+
+      <!-- 8. REPORTS & EXPORT -->
+      <section id="reports" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">DATA GOVERNANCE</p>
+          <h3>Reports & Export Center</h3>
+          <p>Generate role-restricted enterprise logistics audits and operational reports.</p>
+        </div>
+
+        <div class="card form-card">
+          <form id="reportExportForm">
+            <div class="form-grid">
+              <label>Report Type
+                <select id="reportTypeSelect" required>
+                  <option value="SHIPMENT_SUMMARY">Shipment Lifecycle Summary</option>
+                  <option value="DELAY_RISK_AUDIT">Delay Risk & SLA Breach Report</option>
+                  <option value="PROOF_OF_DELIVERY">Proof of Delivery (POD) Audit</option>
+                  <option value="ROUTE_EFFICIENCY">Route Distance & Transit Analytics</option>
+                </select>
+              </label>
+
+              <label>Export Format
+                <select id="reportFormatSelect" required>
+                  <option value="PDF">PDF Document (.pdf)</option>
+                  <option value="EXCEL">Excel Spreadsheet (.xlsx / .csv)</option>
+                </select>
+              </label>
+
+              <label>Date Range
+                <select id="reportDateRange">
+                  <option value="30">Last 30 Days</option>
+                  <option value="90">Last Quarter (90 Days)</option>
+                  <option value="365">Year to Date</option>
+                </select>
+              </label>
+
+              <label>Restricted Data Classification
+                <input id="reportScopeDisplay" readonly value="Business Client Scoped (Verified)" />
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="primary" onclick="generateAndDownloadReport()">⬇ Download Generated Report</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 9. ADMIN ROUTE ANALYTICS -->
+      <section id="admin-routes" class="page-section">
+        <div class="section-intro">
+          <p class="eyebrow">INFRASTRUCTURE TELEMETRY</p>
+          <h3>Admin Route Analytics</h3>
+          <p>Corridor performance, estimate accuracy, and re-route frequency.</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><span>Average Route Distance</span><strong id="adminAvgDistance">248 km</strong><small>Across active corridors</small></div>
+          <div class="stat-card"><span>Time-Estimate Accuracy</span><strong id="adminEstimateAccuracy" style="color:var(--success)">94.2%</strong><small>Within ±15 min ETA window</small></div>
+          <div class="stat-card"><span>Re-Route Events</span><strong id="adminReRouteCount">3</strong><small>Dynamic traffic diversions</small></div>
+          <div class="stat-card"><span>Active Network Corridors</span><strong>8</strong><small>Intercity routes</small></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Best Performing Corridors</h3><p>Highest SLA reliability</p></div></div>
+            <div class="corridor-list" id="bestCorridors"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Worst Performing Corridors (Congestion/Delays)</h3><p>Frequent re-routing required</p></div></div>
+            <div class="corridor-list" id="worstCorridors"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. CREATE SHIPMENT -->
+      <section id="create-shipment" class="page-section">
+        <div class="section-intro"><p class="eyebrow">DISPATCH</p><h3>Create Shipment</h3><p>Enter consignee information and assign transport.</p></div>
+        <div class="card form-card">
+          <form id="shipmentForm">
+            <div class="form-grid">
+              <label>Receiver Name<input id="receiverName" required placeholder="Receiver full name" /></label>
+              <label>Receiver Phone<input id="receiverPhone" required placeholder="9876501234" /></label>
+              <label class="full">Delivery Address<textarea id="deliveryAddress" rows="2" required placeholder="Full street address and city"></textarea></label>
+              <label>Package Type
+                <select id="packageType">
+                  <option>Parcel</option><option>Document</option><option>Electronics</option><option>Fragile</option>
+                </select>
+              </label>
+              <label>Estimated Delivery Date<input id="estimatedDelivery" type="date" required /></label>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="secondary" onclick="navigate('shipments')">Cancel</button>
+              <button class="primary">Create Shipment</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 11. PROFILE -->
+      <section id="profile" class="page-section">
+        <div class="section-intro"><p class="eyebrow">IDENTITY</p><h3>Profile</h3><p>Manage authenticated user attributes.</p></div>
+        <div class="card form-card">
+          <form id="profileForm">
+            <div class="form-grid">
+              <label>Full Name<input id="profileName" value="Ravi Kumar" required /></label>
+              <label>Email<input id="profileEmail" type="email" value="ravi.kiran@example.com" required /></label>
+              <label>Phone<input id="profilePhone" value="9876543210" required /></label>
+              <label>Role
+                <select id="profileRole">
+                  <option>BUSINESS_CLIENT</option><option>CUSTOMER</option><option>OPERATOR</option><option>ADMINISTRATOR</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 12. ADMIN USERS -->
+      <section id="admin" class="page-section">
+        <div class="section-intro"><p class="eyebrow">ADMINISTRATION</p><h3>Manage Users</h3><p>Manage system permissions and accounts.</p></div>
+        <div class="card">
+          <div class="toolbar">
+            <input id="userSearch" placeholder="Search by name or email..." oninput="renderUsers()" />
+            <select id="roleFilter" onchange="renderUsers()">
+              <option value="">All roles</option>
+              <option>CUSTOMER</option><option>BUSINESS_CLIENT</option><option>OPERATOR</option><option>ADMINISTRATOR</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. SETTINGS -->
+      <section id="settings" class="page-section">
+        <div class="section-intro"><p class="eyebrow">PREFERENCES</p><h3>Account Settings</h3><p>Security and notification configurations.</p></div>
+        <div class="settings-list card">
+          <div class="setting-row"><div><strong>Email notifications</strong><p>Receive real-time delay risk alerts.</p></div><label class="switch"><input type="checkbox" checked /><span></span></label></div>
+          <div class="setting-row"><div><strong>STOMP Webhooks</strong><p>Push vehicle GPS data to external endpoints.</p></div><label class="switch"><input type="checkbox" checked /><span></span></label></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
